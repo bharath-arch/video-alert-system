@@ -101,12 +101,12 @@ const DashboardPage: React.FC = () => {
         </Paper>
 
         <Grid container spacing={3}>
-          {/* {cameras.map((camera: any) => (
+          {cameras.map((camera: any) => (
             //@ts-ignore
-            <Grid item xs={12} sm={6} md={4} lg={3} key={camera.id}> */}
-              <CameraCard />
-            {/* </Grid>
-          ))} */}
+            <Grid item xs={12} sm={6} md={4} lg={3} key={camera.id}>
+              <CameraCard camera={camera} onDelete={handleDeleteCamera} />
+            </Grid>
+          ))}
         </Grid>
       </Container>
     </Box>
