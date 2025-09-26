@@ -1,15 +1,25 @@
 import { Hono } from 'hono';
-import { authMiddleware } from '../middlewares/authMiddleware';
+import { authMiddleware } from '../middlewares/authMiddleware.ts';
 import { PrismaClient } from '@prisma/client';
 
 const camerasRoutes = new Hono();
 const prisma = new PrismaClient();
 
-// camerasRoutes.use('*', authMiddleware);
+camerasRoutes.use('*', authMiddleware);
 
 camerasRoutes.get('/', async (c) => {
-  const cameras = await prisma.camera.findMany();
-  // Add the FastAPI stream URL to each camera
+  const user = c.get('user');
+  console.log(user)
+  // const cameras = await prisma.camera.findMany();
+  const cameras = await prisma.camera.findMany({
+  where: {
+    //@ts-ignore
+    userId: user.id
+  },
+  include: {
+    Alert: true
+  }
+});
   const camerasWithStream = cameras.map((camera) => ({
     ...camera,
     streamUrl: `http://127.0.0.1:4000/api/cameras/${camera.id}/stream`,
@@ -18,8 +28,11 @@ camerasRoutes.get('/', async (c) => {
 });
 
 camerasRoutes.post('/', async (c) => {
+  const user = c.get('user');
   const body = await c.req.json();
-  const camera = await prisma.camera.create({ data: body });
+  console.log(body);
+  const camera = await prisma.camera.create({ data: {...body , userId: user.id} });
+  console.log(camera)
   return c.json({
     ...camera,
     streamUrl: `http://127.0.0.1:4000/api/cameras/${camera.id}/stream`,

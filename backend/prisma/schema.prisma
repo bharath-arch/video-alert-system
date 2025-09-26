@@ -17,11 +17,13 @@ model User {
 model Camera {
   id        Int      @id @default(autoincrement())
   name      String
+  userId    Int      
   rtspUrl   String
   location  String?
   enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
   Alert     Alert[]
+  
 }
 
 model Alert {
