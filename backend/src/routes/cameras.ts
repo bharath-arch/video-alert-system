@@ -6,6 +6,8 @@ const camerasRoutes = new Hono();
 const prisma = new PrismaClient();
 
 camerasRoutes.use('*', authMiddleware);
+const baseURL = process.env.BASE_URL;
+const pythonBaseURL=process.env.PYTHON_BASE_URL
 
 camerasRoutes.get('/', async (c) => {
   const user = c.get('user');
@@ -22,10 +24,11 @@ camerasRoutes.get('/', async (c) => {
 });
   const camerasWithStream = cameras.map((camera) => ({
     ...camera,
-    streamUrl: `http://127.0.0.1:4000/api/cameras/${camera.id}/stream`,
+    streamUrl: `${baseURL}/cameras/${camera.id}/stream`,
   }));
   return c.json(camerasWithStream);
 });
+
 
 camerasRoutes.post('/', async (c) => {
   const user = c.get('user');
@@ -35,7 +38,7 @@ camerasRoutes.post('/', async (c) => {
   console.log(camera)
   return c.json({
     ...camera,
-    streamUrl: `http://127.0.0.1:4000/api/cameras/${camera.id}/stream`,
+    streamUrl: `${baseURL}/cameras/${camera.id}/stream`,
   });
 });
 
@@ -48,7 +51,7 @@ camerasRoutes.put('/:id', async (c) => {
   });
   return c.json({
     ...camera,
-    streamUrl: `http://127.0.0.1:4000/api/cameras/${camera.id}/stream`,
+    streamUrl: `${baseURL}/cameras/${camera.id}/stream`,
   });
 });
 
@@ -66,7 +69,7 @@ camerasRoutes.get('/:id/start', async (c) => {
   return c.json({
     id: camera.id,
     rtspUrl: camera.rtspUrl,
-    streamUrl: `http://127.0.0.1:4000/api/cameras/${camera.id}/stream`,
+    streamUrl: `${baseURL}/cameras/${camera.id}/stream`,
   });
 });
 
@@ -110,7 +113,7 @@ camerasRoutes.get('/:id/stream', async (c) => {
   const camera = await prisma.camera.findUnique({ where: { id } });
   if (!camera) return c.json({ error: 'Camera not found' }, 404);
 
-  const fastapiUrl = `http://127.0.0.1:8000/video_feed/${id}?rtsp_url=${encodeURIComponent(camera.rtspUrl)}`;
+  const fastapiUrl = `${pythonBaseURL}/video_feed/${id}?rtsp_url=${encodeURIComponent(camera.rtspUrl)}`;
   const resp = await fetch(fastapiUrl);
 
   if (!resp.ok) {
