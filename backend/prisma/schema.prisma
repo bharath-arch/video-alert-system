@@ -1,0 +1,35 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Camera {
+  id        Int      @id @default(autoincrement())
+  name      String
+  rtspUrl   String
+  location  String?
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  Alert     Alert[]
+}
+
+model Alert {
+  id          Int      @id @default(autoincrement())
+  cameraId    Int
+  timestamp   DateTime @default(now())
+  snapshotUrl String?
+  bbox        Json
+  meta        Json?
+  Camera      Camera   @relation(fields: [cameraId], references: [id])
+}
