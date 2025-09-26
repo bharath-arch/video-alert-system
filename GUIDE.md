@@ -34,25 +34,19 @@ The backend is a Node.js application that uses Hono, Prisma, and TypeScript.
     npm install
     ```
 
-3.  **Set up the database:**
-    This project uses PostgreSQL as the database. You can run a PostgreSQL instance using Docker.
-    ```bash
-    docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres
-    ```
-
-4.  **Configure environment variables:**
+3.  **Configure environment variables:**
     Create a `.env` file in the `backend` directory by copying the example file:
     ```bash
     cp env.example .env
     ```
     Update the `.env` file with your database credentials.
 
-5.  **Run database migrations:**
+4.  **Run database migrations:**
     ```bash
     npx prisma migrate dev
     ```
 
-6.  **Start the backend server:**
+5.  **Start the backend server:**
     ```bash
     npm run dev
     ```
