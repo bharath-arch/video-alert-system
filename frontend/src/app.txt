@@ -10,6 +10,7 @@ interface Alert {
   meta: any | null;
   Camera?: { id: number; name?: string; rtspUrl: string };  // Optional related Camera
 }
+
 const Alerts: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
