@@ -66,7 +66,7 @@ const jwtSecret = process.env.JWT_SECRET;
 
     const payload = {
   suserId: user.id, userName: user.username,
-  exp: Math.floor(Date.now() / 1000) + 60 * 3000, 
+  exp: Math.floor(Date.now() / 1000) + 60 * 300000, 
 }
     const token = await sign(payload, jwtSecret);
 

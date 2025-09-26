@@ -1,0 +1,120 @@
+
+import React, { useEffect, useState } from 'react';
+
+interface Alert {
+  id: number;
+  cameraId: number;
+  timestamp: string;  
+  snapshotUrl: string | null;
+  bbox: { x: number; y: number; w: number; h: number }[];  // Array of bounding boxes
+  meta: any | null;
+  Camera?: { id: number; name?: string; rtspUrl: string };  // Optional related Camera
+}
+
+const Alerts: React.FC = () => {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cameras, setCameras] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCameras = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/cameras');
+        if (!response.ok) throw new Error('Failed to fetch cameras');
+        const data = await response.json();
+        setCameras(data);
+      } catch (err) {
+        setError('Failed to connect to the backend server');
+        console.error(err);
+      }
+    };
+    fetchCameras();
+  }, []);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/cameras/alerts'); 
+        if (!response.ok) {
+          throw new Error('Failed to fetch alerts');
+        }
+        const data: Alert[] = await response.json();
+        setAlerts(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlerts();
+
+    // Optional: Poll for new alerts every 10 seconds
+    const interval = setInterval(fetchAlerts, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) return <div>Loading alerts...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div>
+      <div>
+        <h1>RTSP Video Streams</h1>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+          {cameras.map((camera) => (
+            <div
+              key={camera.id}
+              style={{ flex: "1 1 300px", maxWidth: "500px" }}
+            >
+              <h3>{camera.name || `Camera ${camera.id}`}</h3>
+              <img 
+                src={camera.streamUrl} 
+                alt={`Stream for ${camera.name || `Camera ${camera.id}`}`} 
+                style={{ width: '100%', height: 'auto' }} 
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <h1>Alerts</h1>
+      {alerts.length === 0 ? (
+        <p>No alerts found.</p>
+      ) : (
+        <ul>
+          {alerts.map((alert) => (
+            <li key={alert.id} style={{ marginBottom: "20px" }}>
+              <p>
+                <strong>Camera ID:</strong> {alert.cameraId}{" "}
+                {alert.Camera?.name && `(${alert.Camera.name})`}
+              </p>
+              <p>
+                <strong>Timestamp:</strong>{" "}
+                {new Date(alert.timestamp).toLocaleString()}
+              </p>
+              <p>
+                <strong>Bounding Boxes:</strong> {JSON.stringify(alert.bbox)}
+              </p>
+              {alert.snapshotUrl && (
+                <img
+                  src={alert.snapshotUrl}
+                  alt={`Snapshot for alert ${alert.id}`}
+                  style={{ maxWidth: "400px", border: "1px solid #ccc" }}
+                />
+              )}
+              {alert.meta && (
+                <p>
+                  <strong>Meta:</strong> {JSON.stringify(alert.meta)}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+export default Alerts;
