@@ -1,10 +1,25 @@
 import { Hono } from 'hono';
-import { authMiddleware } from '../middlewares/authMiddleware.ts';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { PrismaClient } from '@prisma/client';
+// import crypto from 'crypto';
+
+
+
 
 const camerasRoutes = new Hono();
 const prisma = new PrismaClient();
 
+
+// function encrypt_nodejs( plaintext: string) {
+//     const encryptionKey = process.env.ENCRIPTION_KEY;
+//     if (!encryptionKey) {
+//     throw new Error('Encryption key is not defined');
+//   }
+//     const cipher = crypto.createCipheriv('aes-128-ecb', Buffer.from(encryptionKey, 'utf-8'), ''); 
+//     let encrypted = cipher.update(plaintext, 'utf8', 'base64');
+//     encrypted += cipher.final('base64');
+//     return encrypted;
+// }
 camerasRoutes.use('*', authMiddleware);
 const baseURL = process.env.BASE_URL;
 const pythonBaseURL=process.env.PYTHON_BASE_URL
@@ -84,11 +99,12 @@ camerasRoutes.post('/:id/stop', async (c) => {
 
 // New endpoint for receiving alerts
 camerasRoutes.post('/alerts', async (c) => {
+  console.log("alerts")
   const body = await c.req.json();
   const alert = await prisma.alert.create({
     data: {
       cameraId: body.camera_id,
-      timestamp: new Date(body.timestamp * 1000),  // Convert Unix timestamp to Date
+      timestamp: new Date(body.timestamp * 1000),  
       snapshotUrl: body.snapshot_url,
       bbox: body.bbox,
       meta: body.meta || null,
@@ -110,11 +126,14 @@ camerasRoutes.get('/alerts', async (c) => {
 // New endpoint to proxy the video stream from FastAPI
 camerasRoutes.get('/:id/stream', async (c) => {
   const id = Number(c.req.param('id'));
+  const user = c.get('user');
+  const token = user.token;
+  // const encrypted_token = encrypt_nodejs(user.token)
   const camera = await prisma.camera.findUnique({ where: { id } });
   if (!camera) return c.json({ error: 'Camera not found' }, 404);
 
   const fastapiUrl = `${pythonBaseURL}/video_feed/${id}?rtsp_url=${encodeURIComponent(camera.rtspUrl)}`;
-  const resp = await fetch(fastapiUrl);
+  const resp = await fetch(`${fastapiUrl}&token=${encodeURIComponent(token)}`);
 
   if (!resp.ok) {
       //@ts-ignore

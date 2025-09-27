@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import {  sign } from 'hono/jwt'
-import { authMiddleware } from '../middlewares/authMiddleware.ts';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const authRoutes = new Hono(); 
 

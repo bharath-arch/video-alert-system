@@ -22,17 +22,19 @@ app = FastAPI()
 # Serve static snapshots
 os.makedirs('snapshots', exist_ok=True)
 app.mount("/snapshots", StaticFiles(directory="snapshots"), name="snapshots")
+backend_url = os.getenv("BACKEND_URL", "http://backend:4000/api")
+worker_url = os.getenv("WORKER_URL", "http://127.0.0.1:8000")
 
 # Allow CORS for the React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[f'{backend_url}'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-async def generate_frames(rtsp_url: str, camera_id: int):
+async def generate_frames(rtsp_url: str, camera_id: int , token: str):
     camera = cv2.VideoCapture(rtsp_url)
     
     if not camera.isOpened():
@@ -67,6 +69,7 @@ async def generate_frames(rtsp_url: str, camera_id: int):
             results = face_detection.process(frame_rgb)
             bboxes = []
             if results.detections:
+                logger.info(f"Detected {len(results.detections)} faces.")
                 for detection in results.detections:
                     bbox = detection.location_data.relative_bounding_box
                     h, w, _ = frame.shape
@@ -77,6 +80,7 @@ async def generate_frames(rtsp_url: str, camera_id: int):
 
             # Send alert if faces detected and cooldown passed
             if len(bboxes) > 0 and current_time - last_alert_time > 5:  # 5-second cooldown
+                logger.info("Sending alert...")
                 last_alert_time = current_time
                 ret, buffer = cv2.imencode('.jpg', frame)
                 if ret:
@@ -86,7 +90,7 @@ async def generate_frames(rtsp_url: str, camera_id: int):
                     snapshot_path = f"snapshots/{filename}"
                     with open(snapshot_path, 'wb') as f:
                         f.write(buffer.tobytes())
-                    snapshot_url = f"http://127.0.0.1:8000/snapshots/{filename}"
+                    snapshot_url = f"{worker_url}/snapshots/{filename}"
 
                     # Build alert object
                     alert = {
@@ -100,7 +104,7 @@ async def generate_frames(rtsp_url: str, camera_id: int):
                     # POST alert to backend API
                     try:
                         async with aiohttp.ClientSession() as session:
-                            async with session.post('http://127.0.0.1:4000/api/cameras/alerts', json=alert) as resp:
+                            async with session.post(f'{backend_url}/cameras/alerts?token={token}', json=alert) as resp:
                                 if resp.status != 200:
                                     logger.warning(f"Failed to post alert: {resp.status}")
                     except Exception as e:
@@ -123,8 +127,8 @@ async def generate_frames(rtsp_url: str, camera_id: int):
         logger.info(f"Camera released for {rtsp_url}")
 
 @app.get("/video_feed/{camera_id}")
-async def video_feed(camera_id: int, rtsp_url: str = Query(...)):
-    return StreamingResponse(generate_frames(rtsp_url, camera_id), media_type="multipart/x-mixed-replace; boundary=frame")
+async def video_feed(camera_id: int, rtsp_url: str ,token: str = Query(...)):
+    return StreamingResponse(generate_frames(rtsp_url, camera_id,token ), media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.get("/")
 async def root():
