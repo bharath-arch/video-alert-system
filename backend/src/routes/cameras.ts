@@ -99,11 +99,12 @@ camerasRoutes.post('/:id/stop', async (c) => {
 
 // New endpoint for receiving alerts
 camerasRoutes.post('/alerts', async (c) => {
+  console.log("alerts")
   const body = await c.req.json();
   const alert = await prisma.alert.create({
     data: {
       cameraId: body.camera_id,
-      timestamp: new Date(body.timestamp * 1000),  // Convert Unix timestamp to Date
+      timestamp: new Date(body.timestamp * 1000),  
       snapshotUrl: body.snapshot_url,
       bbox: body.bbox,
       meta: body.meta || null,
@@ -132,7 +133,7 @@ camerasRoutes.get('/:id/stream', async (c) => {
   if (!camera) return c.json({ error: 'Camera not found' }, 404);
 
   const fastapiUrl = `${pythonBaseURL}/video_feed/${id}?rtsp_url=${encodeURIComponent(camera.rtspUrl)}`;
-  const resp = await fetch(`${fastapiUrl}?token=${token}`);
+  const resp = await fetch(`${fastapiUrl}&token=${encodeURIComponent(token)}`);
 
   if (!resp.ok) {
       //@ts-ignore

@@ -23,7 +23,7 @@ app = FastAPI()
 os.makedirs('snapshots', exist_ok=True)
 app.mount("/snapshots", StaticFiles(directory="snapshots"), name="snapshots")
 backend_url = os.getenv("BACKEND_URL", "http://backend:4000/api")
-worker_url = os.getenv("WORKER_URL", "http://worker:8000/api")
+worker_url = os.getenv("WORKER_URL", "http://127.0.0.1:8000")
 
 # Allow CORS for the React frontend
 app.add_middleware(

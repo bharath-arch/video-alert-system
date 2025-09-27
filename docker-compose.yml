@@ -29,6 +29,8 @@ services:
     build: ./worker
     env_file:
       - ./worker/.env
+    # volumes:
+    #   - ./snapshots:/usr/src/app/snapshots
     networks:
       - my_network
     

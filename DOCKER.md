@@ -9,8 +9,9 @@ docker-compose logs -f (View the logs of the docker containers.)
 docker-compose up --build -d (Rebuild and restart the docker containers.)
 docker run -it --rm -p 4000:4000 backend:latest
 
-build the entier thing 
-docker-compose up --build
+#build the entier thing 
+docker-compose up --build 
+
 
 docker-compose logs -f worker
 
