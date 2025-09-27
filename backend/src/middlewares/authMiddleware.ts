@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 declare module 'hono' {
   interface ContextVariableMap {
-    user: { id: number; username: string };
+    user: { id: number; username: string ; token: string };
   }
 }
 
@@ -41,8 +41,9 @@ export const authMiddleware = async (c: Context, next: Next) => {
     if (!user) {
       return c.json({ error: 'User not found' }, 401);
     }
+const userWithToken = { id: user.id, username: user.username, token };
 
-    c.set('user', { id: user.id, username: user.username });
+    c.set('user', userWithToken);
     await next();
   } catch (error) {
     console.error('Auth middleware error:', error);

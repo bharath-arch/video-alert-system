@@ -5,9 +5,9 @@ import { cors } from 'hono/cors'
 // import { PrismaClient } from '@prisma/client';
 
 
-import {authRoutes} from './routes/auth.ts';
-// import { authMiddleware } from './middlewares/authMiddleware.ts';
-import { camerasRoutes } from './routes/cameras.ts';
+import {authRoutes} from './routes/auth.js';
+// import { authMiddleware } from './middlewares/authMiddleware.js';
+import { camerasRoutes } from './routes/cameras.js';
 
 dotenv.config();
 
@@ -18,7 +18,7 @@ const app = new Hono().basePath('/api');
 app.use(
   '/*',
   cors({
-    origin: ['http://localhost:5173'], // Allow React frontend
+    origin: ['http://localhost:5173' ,'http://localhost:8080' ], // Allow React frontend
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     credentials: true, // Allow credentials if needed (e.g., for auth)

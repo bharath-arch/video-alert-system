@@ -16,6 +16,7 @@ const AddCameraForm: React.FC<AddCameraFormProps> = ({ onAdd }) => {
       onAdd(name, rtspUrl , location);
       setName('');
       setRtspUrl('');
+      setLocation('');
     }
   };
 
